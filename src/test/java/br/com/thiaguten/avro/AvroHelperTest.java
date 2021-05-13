@@ -3,50 +3,50 @@ package br.com.thiaguten.avro;
 import org.apache.avro.Schema;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
 import java.util.Objects;
 
 import static org.junit.Assert.*;
 
 public class AvroHelperTest {
 
-    String schemaString = """
-            {
-              "type" : "record",
-              "name" : "User",
-              "namespace" : "br.com.thiaguten.avro.AvroHelperTest",
-              "fields" : [ {
-                "name" : "name",
-                "type" : "string"
-              }, {
-                "name" : "favoriteNumber",
-                "type" : "int"
-              }, {
-                "name" : "favoriteColor",
-                "type" : "string"
-              } ]
-            }
-            """.trim();
+    private final String schemaString = "{\n" +
+            "  \"type\" : \"record\",\n" +
+            "  \"name\" : \"User\",\n" +
+            "  \"namespace\" : \"br.com.thiaguten.avro.AvroHelperTest\",\n" +
+            "  \"fields\" : [ {\n" +
+            "    \"name\" : \"name\",\n" +
+            "    \"type\" : \"string\"\n" +
+            "  }, {\n" +
+            "    \"name\" : \"favoriteNumber\",\n" +
+            "    \"type\" : \"int\"\n" +
+            "  }, {\n" +
+            "    \"name\" : \"favoriteColor\",\n" +
+            "    \"type\" : \"string\"\n" +
+            "  } ]\n" +
+            "}";
 
-    String allowNullSchemaString = """
-            {
-              "type" : "record",
-              "name" : "User",
-              "namespace" : "br.com.thiaguten.avro.AvroHelperTest",
-              "fields" : [ {
-                "name" : "name",
-                "type" : [ "null", "string" ],
-                "default" : null
-              }, {
-                "name" : "favoriteNumber",
-                "type" : [ "null", "int" ],
-                "default" : null
-              }, {
-                "name" : "favoriteColor",
-                "type" : [ "null", "string" ],
-                "default" : null
-              } ]
-            }
-            """.trim();
+    private final String allowNullSchemaString = "{\n" +
+            "  \"type\" : \"record\",\n" +
+            "  \"name\" : \"User\",\n" +
+            "  \"namespace\" : \"br.com.thiaguten.avro.AvroHelperTest\",\n" +
+            "  \"fields\" : [ {\n" +
+            "    \"name\" : \"name\",\n" +
+            "    \"type\" : [ \"null\", \"string\" ],\n" +
+            "    \"default\" : null\n" +
+            "  }, {\n" +
+            "    \"name\" : \"favoriteNumber\",\n" +
+            "    \"type\" : [ \"null\", \"int\" ],\n" +
+            "    \"default\" : null\n" +
+            "  }, {\n" +
+            "    \"name\" : \"favoriteColor\",\n" +
+            "    \"type\" : [ \"null\", \"string\" ],\n" +
+            "    \"default\" : null\n" +
+            "  } ]\n" +
+            "}";
 
     public static class User {
 
@@ -112,6 +112,32 @@ public class AvroHelperTest {
                     ", favoriteColor='" + favoriteColor + '\'' +
                     '}';
         }
+    }
+
+    private File createSchemaFile(String name, String content) throws IOException {
+        String dir = System.getProperty("user.dir");
+        Path path = Paths.get(dir, name);
+        OpenOption[] options = { StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING };
+        Files.write(path, content.getBytes(StandardCharsets.UTF_8), options);
+        File file = path.toFile();
+        file.deleteOnExit();
+        return file;
+    }
+
+    @Test
+    public void createSchemaWithFileTest() throws IOException {
+        File file = createSchemaFile("UserSchema.avsc", schemaString);
+        Schema schema = AvroHelper.createSchema(file);
+        assertNotNull(schema);
+        assertEquals(schemaString, schema.toString(true));
+    }
+
+    @Test
+    public void createAllowNullSchemaWithFileTest() throws IOException {
+        File file = createSchemaFile("UserAllowNullSchema.avsc", allowNullSchemaString);
+        Schema schema = AvroHelper.createSchema(file);
+        assertNotNull(schema);
+        assertEquals(allowNullSchemaString, schema.toString(true));
     }
 
     @Test

@@ -1,24 +1,14 @@
 package br.com.thiaguten.avro;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.EOFException;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.io.BinaryDecoder;
-import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.io.JsonDecoder;
-import org.apache.avro.io.JsonEncoder;
+import org.apache.avro.io.*;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
+
+import java.io.*;
 
 /**
  * Avro utility class for serialization and deserialization.
@@ -30,29 +20,6 @@ public final class AvroHelper {
 	private AvroHelper() {
 		// not instantiable
 	}
-
-//	public static final ObjectMapper objectMapper = new ObjectMapper();
-//
-//	private static <T> T fromJson(String src, Class<T> srcType) {
-//		try {
-//			return objectMapper.readValue(src, srcType);
-//		} catch (Exception e) {
-//			throw new RuntimeException(e);
-//		}
-//	}
-//
-//	/**
-//	 *
-//	 * @deprecated porque não tem necessidade converter o payload (bytes) para json
-//	 *             (string) e depois para object (pojo), sendo que isso pode ser
-//	 *             feito diretamente.
-//	 * @see usar os outros metodos fromAvro
-//	 */
-//	@Deprecated
-//	public static <T, D> T fromAvro(byte[] payload, Class<T> payloadType, Class<D> schemaType) {
-//		String json = fromAvroToJson(payload, schemaType);
-//		return fromJson(json, payloadType);
-//	}
 
 	public static <T> T fromAvro(byte[] payload, Class<T> schemaType) {
 		return fromAvro(payload, schemaType, false);
@@ -76,7 +43,7 @@ public final class AvroHelper {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	public static <T> byte[] toAvro(T object, Class<T> schemaType) {
 		return toAvro(object, schemaType, false);
 	}
@@ -108,7 +75,7 @@ public final class AvroHelper {
 		return fromAvroToJson(avroBytes, schema);
 	}
 
-	public static <T> String fromAvroToJson(byte[] avroBytes, Schema schema) {
+	public static String fromAvroToJson(byte[] avroBytes, Schema schema) {
 		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 			DatumReader<Object> datumReader = new GenericDatumReader<>(schema);
 			DatumWriter<Object> datumWriter = new GenericDatumWriter<>(schema);
@@ -136,7 +103,7 @@ public final class AvroHelper {
 		return fromJsonToAvro(json, schema);
 	}
 
-	public static <T> byte[] fromJsonToAvro(String json, Schema schema) {
+	public static byte[] fromJsonToAvro(String json, Schema schema) {
 		try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 			DatumReader<Object> datumReader = new GenericDatumReader<>(schema);
 			DatumWriter<Object> datumWriter = new GenericDatumWriter<>(schema);
@@ -170,6 +137,10 @@ public final class AvroHelper {
 	}
 
 	public static Schema createSchema(String input) {
+		return new Schema.Parser().parse(input);
+	}
+
+	public static Schema createSchema(File input) throws IOException {
 		return new Schema.Parser().parse(input);
 	}
 
